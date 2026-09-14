@@ -137,7 +137,7 @@ Activate **Travel Assistant** to start handling live conversations.
 
 ---
 
-## ✒️ Development Team
+## ✒️ Developer
 **Nidanur Sıgırta** 
 
 ## 🛡️ License
