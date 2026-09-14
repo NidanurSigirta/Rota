@@ -138,7 +138,7 @@ Activate **Travel Assistant** to start handling live conversations.
 ---
 
 ## ✒️ Development Team
-**Nidanur Sığırta** — AI Workflow Designer & RAG Architecture
+**Nidanur Sıgırta** 
 
 ## 🛡️ License
 © 2026 ROTA. All rights reserved.
