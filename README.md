@@ -138,7 +138,7 @@ Activate **Travel Assistant** to start handling live conversations.
 ---
 
 ## ✒️ Developer
-**Nidanur Sıgırta** 
+**Nidanur Sigirta** 
 
 ## 🛡️ License
 © 2026 ROTA. All rights reserved.
