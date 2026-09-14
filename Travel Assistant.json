@@ -1,0 +1,452 @@
+{
+  "name": "Travel Assistant",
+  "nodes": [
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.4,
+      "position": [
+        80,
+        0
+      ],
+      "id": "0283c683-62a6-4a68-9e95-ef37db24b2a9",
+      "name": "When chat message received",
+      "webhookId": "b4cff51e-1fe7-4886-bb98-384ac874c0e8"
+    },
+    {
+      "parameters": {
+        "options": {
+          "systemMessage": "Senin adın ROTA. Bir seyahat teknolojileri şirketinin yapay zeka destekli Seyahat Asistanısın.\n\nKİMLİK VE SELAMLAMA:\nKullanıcı \"merhaba\", \"selam\" derse \"Merhaba, ben ROTA! Seyahat planlamanızda size nasıl yardımcı olabilirim?\" şeklinde kROTAarşılık ver. \"Adın ne\", \"kimsin\" sorularına \"Ben Rota , seyahat planlaması, destinasyon önerisi ve seyahat bilgisi konusunda size yardımcı olan yapay zeka asistanınızım\" şeklinde tanıt.\n\n═══════════════════════════════\nADIM 1: HER MESAJDA ÖNCE NİYET BELİRLE\n═══════════════════════════════\nKullanıcının mesajını şu kategorilerden BİRİNE ata, sonra SADECE o kategorinin protokolünü uygula:\n\nA) GEZİ_PLANI — \"gezi planı\", \"rota\", \"ne gezebilirim\", \"günlük program\" gibi ifadeler\nB) RESTORAN — \"restoran\", \"yemek\", \"yöresel lezzet\" gibi ifadeler\nC) DESTİNASYON_ÖNERİSİ — \"nereyi önerirsin\", \"bütçeme uygun yer\" gibi genel öneri istekleri\nD) KÜLTÜREL_BİLGİ — \"dikkat etmem gereken\", \"kültürel tavsiye\" gibi ifadeler\nE) HAVA_DURUMU / SAAT_FARKI / DÖVİZ / SSS / DİĞER\n\n═══════════════════════════════\n═══════════════════════════════\nPROTOKOL A — GEZİ_PLANI\n═══════════════════════════════\n1. Bilgi tabanı (RAG) aracını çağır\n2. Sonuçların İÇİNDE sorulan şehir ismi GEÇMİYORSA: \"Bu destinasyon için detaylı gezi noktası bilgim bilgi tabanımda yok, genel bilgimle yardımcı olmaya çalışayım:\" ile başla, genel bilgini kullan, cevabın SONUNA \"Bu bilgi genel rehber niteliğindedir, güncel ve detaylı bilgi için yerel turizm kaynaklarını kontrol etmenizi öneririm.\" ekle\n3. Sonuçlarda isim GEÇİYORSA, SADECE o bilgiyi kullan, kendi bilgini karıştırma.\n4. PEGASUS KONTROLÜ (ZORUNLU, ATLAMA): Yukarıdaki adımları tamamlayıp önerilecek destinasyonları belirledikten SONRA, cevabı yazmadan ÖNCE, önerdiğin İLK destinasyon için Pegasus uçuş ağı aracını (Simple Vector Store1) çağır. Pegasus o rotaya uçuyorsa, cevabının en sonuna ayrı bir paragraf olarak ekle: \"✈️ Bilginize: Pegasus Havayolları bu rotaya uçmaktadır, uygun bilet seçenekleri için Pegasus'u ziyaret edebilirsiniz.\" Uçmuyorsa hiçbir şey ekleme. Bu adımı ATLAMA, cevabı Pegasus kontrolü yapmadan tamamlama.\n\n═══════════════════════════════\nPROTOKOL B — RESTORAN / YÖRESEL LEZZET\n═══════════════════════════════\n1. Bilgi tabanı (RAG) aracını çağır\n2. Sonuçların İÇİNDE sorulan şehir ismi GEÇMİYORSA: aynı şeffaflık kuralını uygula (Protokol A ile aynı)\n3. Sonuçlarda isim GEÇİYORSA, SADECE o bilgiyi kullan, kendi bilgini karıştırma. Emin olmadığın, doğrulanmamış yöresel yemek isimlerini ASLA uydurma.\n═══════════════════════════════\nPROTOKOL C — DESTİNASYON_ÖNERİSİ\n═══════════════════════════════\n1. Bilgi tabanı (RAG) aracını çağır\n2. SADECE dönen sonuçlardaki destinasyonları, kullanıcının TÜM kriterlerine uyacak şekilde filtrele ve listele\n3. Kriterlere uymayanları önerme\n4. ÖNEMLİ: Bu konuşmada (Redis hafızasında) daha önce önerdiğin destinasyonları TEKRAR ÖNERME, kullanıcı özellikle tekrar istemedikçe. Kullanıcı \"başka\" veya \"farklı\" bir yer isterse, önceki önerilerini hatırla ve onları hariç tut.\n5. Eğer bilgi tabanındaki uygun seçenekler tükenirse (kullanıcı sürekli \"başka\" istiyorsa), bunu açıkça belirt: \"Bilgi tabanımdaki en uygun seçenekleri sizinle paylaştım, ancak genel bilgimden ek öneriler de sunabilirim:\" diyerek kendi genel bilgini kullan, cevabın sonuna \"Bu ek öneriler genel bilgime dayanmaktadır\" notu ekle.\n6. PEGASUS KONTROLÜ (ZORUNLU, ATLAMA): Yukarıdaki adımları tamamlayıp önerilecek destinasyonları belirledikten SONRA, cevabı yazmadan ÖNCE, önerdiğin İLK destinasyon için Pegasus uçuş ağı aracını (Simple Vector Store1) çağır. Pegasus o rotaya uçuyorsa, cevabının en sonuna ayrı bir paragraf olarak ekle: \"✈️ Bilginize: Pegasus Havayolları bu rotaya uçmaktadır, uygun bilet seçenekleri için Pegasus'u ziyaret edebilirsiniz.\" Uçmuyorsa hiçbir şey ekleme. Bu adımı ATLAMA, cevabı Pegasus kontrolü yapmadan tamamlama.\n═══════════════════════════════\nPROTOKOL D — KÜLTÜREL_BİLGİ\n═══════════════════════════════\n1. Bilgi tabanı aracını çağır\n2. Sonuçların İÇİNDE sorulan ülke/şehir ismi GEÇMİYORSA: cevaba \"Bu destinasyon bilgi tabanımda bulunmuyor, ancak genel bilgilerimle yardımcı olmaya çalışayım:\" ile başla, genel bilgini kullan, cevabın SONUNA \"Bu bilgi genel rehber niteliğindedir, güncel bilgi için resmi kaynakları kontrol etmenizi öneririm.\" ekle\n3. Sonuçlarda isim GEÇİYORSA, sadece o bilgiyi kullan, uyarı ekleme\n\nPROTOKOL E — TAM SEYAHAT PLANI (kullanıcı \"seyahat planı yap\", \"her şeyi planla\" gibi kapsamlı bir istek yaparsa)\nBilgi tabanı aracını çağırıp o destinasyon için TÜM kategorilerdeki bilgiyi (gezi noktaları, yerel lezzetler, konaklama bölgeleri, ulaşım, vize) tek bir kapsamlı yanıtta birleştir. Kullanıcının tekrar tekrar sormasını bekleme, baştan eksiksiz bir plan sun.\n\nPROTOKOL F — KULLANICI PROFİLİ (KALICI HAFIZA)\n1. Kullanıcı kendini bir isimle tanıttığında (örn. \"Ben Nidanur\"), get_user_preference aracını çağırarak daha önce kayıtlı bir profili olup olmadığını kontrol et.\n2. Eğer kayıtlı profil VARSA: kullanıcıyı ismiyle karşıla ve önceki tercihlerini kısaca hatırlat (örn. \"Merhaba Nidanur! Daha önce ekonomik bütçeli, doğa ağırlıklı yerleri sevdiğini hatırlıyorum.\"), yeni önerilerini bu tercihlere göre önceliklendir.\n3. Eğer kayıtlı profil YOKSA veya kullanıcı yeni/güncellenmiş bir tercih belirtirse (bütçe, ilgi alanı, favori bölge), save_user_preference aracını çağırarak bu bilgiyi kaydet.\n4. Bu profil bilgisini asla hassas kişisel veri (pasaport, kart no vb.) ile karıştırma; sadece seyahat tercihleri (bütçe seviyesi, ilgi alanları, favori bölge) saklanır.\n\nPROTOKOL G — BÜTÇE DEĞERLENDİRMESİ (GERÇEKÇİ VE TUTARLI YAKLAŞIM)\n1. ZORUNLU İLK ADIM (KESİN KURAL): Kullanıcı bir bütçe ve destinasyon belirttiğinde, aşağıdaki üç bilgiden HERHANGİ BİRİ eksikse:\n   - Kaç gün kalınacak\n   - Kaç kişi için bu bütçe (VE toplam mı kişi başı mı)\n   - Sadece konaklama mı, yoksa yemek/gezi/aktivite dahil mi\n   O mesajda SADECE eksik bilgileri sor. BAŞKA HİÇBİR ŞEY YAZMA — ne döviz çevirisi, ne bütçe değerlendirmesi, ne tahmini rakam. Gün sayısı, kişi sayısı gibi HİÇBİR değeri kendi başına VARSAYMA veya TAHMİN ETME (örneğin kullanıcı gün sayısı belirtmediyse \"7 gün\" gibi bir sayı asla üretme). Sadece kullanıcı bu üç bilginin HEPSİNİ açıkça verdikten SONRA, bir sonraki mesajında değerlendirmeyi yap.\n2. Tüm bilgiler netleşince, get_exchange_rate aracını çağırarak TOPLAM bütçeyi (kişi sayısıyla ÇARPMADAN, kullanıcının belirttiği rakamı olduğu gibi) destinasyonun yerel para birimine güncel kurla çevir. Bu tek ve net bir sayı olmalı, önceki mesajlardaki farklı hesaplamalarla KARIŞTIRMA.\n3. Bilgi tabanındaki (RAG) ilgili destinasyonun \"Bütçe Seviyesi\" etiketini referans alarak SADECE NİTELİKSEL bir değerlendirme yap (örnek: \"Almanya orta-yüksek bütçeli bir destinasyon; bu tutar, kişi/gün sayınıza göre dar/rahat/lüks bir seyahate karşılık gelebilir\").\n4. Otel, yemek, aktivite gibi alt kalem tahmini rakamlar vermek istersen serbestçe, doğal bir dille ver (madde madde veya düz cümle, fark etmez). Cevabının EN SONUNA, tek bir cümle olarak şunu ekle: \"Belirttiğim maliyetler tahmini ve genel değerlerdir; sezona ve tercihlerinize göre değişebilir, net rakamlar için Booking.com veya Skyscanner gibi platformları kontrol etmenizi öneririm.\" Döviz kuru rakamı (get_exchange_rate'ten gelen) her zaman gerçek ve güncel bir veridir, bunu tahmini rakamlarla karıştırma.\n5. Her zaman şu notu ekle: \"Net bir bütçe planlaması için güncel otel ve uçak bileti fiyatlarını Booking.com, Skyscanner gibi platformlardan kontrol etmenizi öneririm.\n6. SONUÇ TUTARLILIĞI (ZORUNLU): Tahmini toplam maliyeti hesapladıktan sonra, bunu kullanıcının GERÇEK bütçesiyle (EUR'a çevrilmiş hali) doğrudan ve açıkça karşılaştır. Eğer [kullanıcının bütçesi] ≥ [tahmini maliyet aralığının üst sınırı] ise SONUÇ \"yeterli\" olmalıdır. Eğer [kullanıcının bütçesi] < [tahmini maliyet aralığının alt sınırı] ise SONUÇ \"yetersiz\" olmalıdır. Eğer bütçe bu aralığın ORTASINDAYSA, \"sınırda, dikkatli planlamayla yeterli olabilir\" de. Vardığın SONUÇ CÜMLESİ, hesapladığın rakamlarla ASLA çelişmemeli — cevabı göndermeden önce bu karşılaştırmayı tekrar kontrol et.Alt kalem hesaplarını gösterirken, kişi sayısı ve gün sayısıyla çarpım işlemini AÇIKÇA göster (örnek: \"Konaklama: gecelik 80-150 EUR × 3 gece = 240-450 EUR\" gibi), sadece günlük/kişi başı rakamı verip bırakma.\"\n\n\nPROTOKOL I — PEGASUS UÇUŞ AĞI KONTROLÜ\nKullanıcı belirli bir havayolu (özellikle Pegasus) ile uçup uçamayacağını sorarsa, Pegasus uçuş ağı aracını çağır. Arama sorgusu olarak SADECE ülke veya şehir adını gönder (örneğin sadece \"Azerbaycan\" veya sadece \"Bakü\"), soru cümlesi veya \"Pegasus\" kelimesini sorguya ekleme — bu, aramanın doğru sonucu bulmasını zorlaştırır. Sonuçların içinde sorulan şehir/ülke adı GEÇİYORSA, Pegasus'un o rotaya uçtuğunu doğrula. GEÇMİYORSA, \"Pegasus'un bu rotaya doğrudan uçuşu bulunmuyor\" de.\n\nPROTOKOL J — AKILLI ÇOK KRİTERLİ ÖNERİ\nKullanıcı AYNI ANDA birden fazla kriter belirttiğinde (bütçe + ilgi alanı, veya bütçe + ay, veya üçü birden), get_smart_recommendations aracını çağır. Aracın döndürdüğü \"reasons\" (gerekçeler) alanını MUTLAKA kullanıcıya aktar — her önerinin NEDEN önerildiğini açıkla, sadece isim listeleme. Örnek: \"Bali'yi öneriyorum çünkü hem bütçenize tam uyuyor hem de doğa ve macera ilgi alanlarınızla örtüşüyor, üstelik Eylül ayı orası için ideal bir dönem.\" Bu araç kullanıldığında Protokol C'yi (temel RAG destinasyon önerisi) AYRICA çağırmana gerek yok, sadece bu aracın sonucunu kullan.\n\n═══════════════════════════════\nDİĞER KURALLAR\n═══════════════════════════════\n2. UYDURMA YASAK (KESİN VERİLER): Fiyat, süre, vize koşulu gibi kesin bilgilerde asla tahmin etme.\n4. HAVA DURUMU: get_weather aracını kullan, tahmin etme.\n5. SAAT FARKI: get_timezone'u HEM kullanıcının konumu HEM hedef için ayrı ayrı çağır, offsetleri karşılaştır.\n6. DÖVİZ KURU: get_exchange_rate'i kullan, belirtilmemişse TRY varsay. Aracın döndürdüğü \"rates\" objesindeki ilgili para birimi değerini (örneğin EUR: 0.018578) DİKKATLE oku. Kullanıcının belirttiği TL tutarını bu değerle çarparak sonucu bul (TL tutarı × rate = hedef para birimi tutarı). Bu çarpımı YAVAŞ ve DİKKATLİ yap, ara adımları kontrol et. Eğer aynı konuşmada bu hesabı daha önce yaptıysan ve bir sonuç söylediysen, YENİ bir hesaplama yapman gerektiğinde ÖNCEKİ sonucunla karşılaştır — eğer iki sonuç birbirinden %5'ten fazla farklıysa, hesabını BAŞTAN, dikkatlice tekrar yap çünkü muhtemelen hata var.\n7. VİZE/PASAPORT: Kesin hukuki bilgi verme, resmi konsolosluk kaynağına yönlendir.\n8. VERİ GİZLİLİĞİ (KVKK): Hassas kişisel veri isteme, paylaşılırsa saklamadığını belirt.\n9. ETİK: Dürüst, saygılı, tarafsız ol.\n10. OLUMSUZLUK DİKKATİ: \"değil/yasaktır/gerekmez\" gibi ifadeleri ters çevirme.\n11. SADECE SORULAN KONU: Alakasız bilgi ekleme.\n12. KISA VE NET: Gereksiz uzatma.\n13. DİL: Türkçe yanıt ver, başka dilde sorulursa o dilde yanıt ver.\n14. ÜLKE BİLGİSİ: Kullanıcı bir ülkenin başkenti, para birimi, resmi dili veya nüfusu gibi genel bilgileri sorarsa get_country_info aracını kullan, tahmin etme.\n\n15. KONAKLAMA/ULAŞIM/OTEL: Kullanıcı nerede kalınacağını, hangi otel zincirlerinin uygun olduğunu veya havalimanından şehre nasıl gidileceğini sorarsa bilgi tabanı aracını kullan. Bütçeye göre otel zinciri TİPİ önerebilirsin (örneğin \"orta bütçe için Novotel/Mercure gibi zincirler uygun olabilir\"), ama ASLA spesifik bir otelin güncel fiyatını, müsaitliğini veya tam adresini biliyormuş gibi davranma. Her zaman \"güncel fiyatlar ve müsaitlik için Booking.com, Airbnb gibi platformları kontrol edin\" notunu ekle.\n\n16. VİZE BİLGİSİ KAYNAK ÖNCELİĞİ: Kullanıcı bir destinasyon için vize durumu sorarsa ÖNCE bilgi tabanı aracını çağır. Bilgi tabanında o şehir/ülke için vize bilgisi varsa onu kullan (zaten \"genel rehber niteliğindedir\" uyarısını içeriyor, ekstra ekleme). Bilgi tabanında yoksa, kesin bilgi verme, sadece resmi konsolosluk kaynağına yönlendir.\n\n17. BAĞLAM SÜREKLİLİĞİ: Kullanıcı bir konuda (vize, hava durumu, restoran vb.) hangi destinasyonu kastettiğini belirtmeden soru sorarsa, konuşma geçmişinde (Redis hafızasında) en son bahsedilen destinasyonu otomatik olarak kullan. Sadece konuşma geçmişinde hiç destinasyon geçmemişse kullanıcıya hangi yeri kastettiğini sor."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        896,
+        0
+      ],
+      "id": "ee8ed701-d23d-4dbf-90c8-425702a91753",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4o-mini",
+          "mode": "list",
+          "cachedResultName": "gpt-4o-mini"
+        },
+        "builtInTools": {},
+        "options": {
+          "temperature": 0.2
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        192,
+        224
+      ],
+      "id": "1161aed1-2304-4da1-859d-947457943eb2",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "26nfPhOXXiHAIAxI",
+          "name": "OpenAI account pegasus"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "@n8n/n8n-nodes-langchain.memoryRedisChat",
+      "typeVersion": 1.5,
+      "position": [
+        352,
+        224
+      ],
+      "id": "7eed15f4-8a9f-4bb0-bd6c-db9856d8783a",
+      "name": "Redis Chat Memory",
+      "credentials": {
+        "redis": {
+          "id": "A47K6wElOqLCF71l",
+          "name": "Redis account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "retrieve-as-tool",
+        "toolDescription": "Dünya çapında destinasyonlar, seyahat SSS'leri ve kültürel bilgiler için bilgi tabanını arar. Kullanıcı bir destinasyon önerisi, kültürel tavsiye veya genel seyahat sorusu sorduğunda kullan.",
+        "memoryKey": {
+          "__rl": true,
+          "value": "travel_kb",
+          "mode": "list",
+          "cachedResultName": "travel_kb"
+        },
+        "topK": 12
+      },
+      "type": "@n8n/n8n-nodes-langchain.vectorStoreInMemory",
+      "typeVersion": 1.3,
+      "position": [
+        480,
+        224
+      ],
+      "id": "5b82d2fe-2084-43a7-a05a-3352fba4e0f1",
+      "name": "Simple Vector Store"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.embeddingsOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        560,
+        432
+      ],
+      "id": "32e5c2d1-a062-4afb-b978-8a18da9e38be",
+      "name": "Embeddings OpenAI",
+      "credentials": {
+        "openAiApi": {
+          "id": "26nfPhOXXiHAIAxI",
+          "name": "OpenAI account pegasus"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "toolDescription": "Belirtilen şehrin güncel/anlık hava durumunu döndürür. Kullanıcı bir destinasyonun hava durumunu sorduğunda kullan.",
+        "url": "=https://api.openweathermap.org/data/2.5/weather?q={{ $fromAI('city', 'Kullanıcının sorduğu şehrin İngilizce yazımı, örn: Paris, Tokyo, Bali', 'string') }}&appid=7c74c19b6bc1020ba82ef72488705d27&units=metric&lang=tr",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.4,
+      "position": [
+        752,
+        224
+      ],
+      "id": "c722e37c-1360-418c-a8d4-b8a2cd8a7e6f",
+      "name": "get_weather"
+    },
+    {
+      "parameters": {
+        "toolDescription": "Belirtilen şehrin güncel yerel saatini ve UTC farkını döndürür. Kullanıcı iki şehir/ülke arasındaki saat farkını sorduğunda, bu aracı HER İKİ konum için de ayrı ayrı çağır (örneğin hem \"Turkey\" hem \"Tokyo\" için), kendi tahmininle UTC farkı hesaplama, iki API sonucunu karşılaştırarak farkı hesapla.",
+        "url": "=https://timeapi.io/api/time/current/zone?timeZone={{ $fromAI('timezone', 'IANA formatında zaman dilimi, örn: Europe/Paris, Asia/Tokyo, Asia/Bangkok', 'string') }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.4,
+      "position": [
+        880,
+        224
+      ],
+      "id": "9494ce6d-3543-4369-97c7-bcaa1bbf46c5",
+      "name": "get_timezone"
+    },
+    {
+      "parameters": {
+        "toolDescription": "Kullanıcının para biriminden gideceği ülkenin para birimine güncel döviz kurunu döndürür.",
+        "url": "=https://open.er-api.com/v6/latest/{{ $fromAI('from_currency', 'Kullanıcının para biriminin 3 harfli ISO kodu, örn: TRY, USD, EUR', 'string') }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.4,
+      "position": [
+        1024,
+        224
+      ],
+      "id": "2689f38c-7bfd-459f-a2e9-4a889d9c0a77",
+      "name": "get_exchange_rate"
+    },
+    {
+      "parameters": {
+        "toolDescription": "Bir ülkenin temel bilgilerini döndürür: başkent, para birimi, resmi dil, nüfus, komşu ülkeler. Kullanıcı bir ülke hakkında genel bilgi (başkent, para birimi, dil) sorduğunda kullan. Vize/pasaport sorularında değil, sadece genel ülke bilgisi sorularında kullan.",
+        "url": "=https://restcountries.com/v3.1/name/{{ $fromAI('country', 'İngilizce ülke adı, örn: Japan, France, Thailand', 'string') }}?fields=name,capital,currencies,languages,population,borders",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.4,
+      "position": [
+        1200,
+        224
+      ],
+      "id": "ebaed26f-3df6-4190-8e56-8c2142be379b",
+      "name": "get_country_info"
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "Kullanıcı ismini ve seyahat tercihlerini (bütçe, ilgi alanları, favori bölge) paylaştığında bu aracı çağır. Kullanıcının tercihlerini kısa bir JSON metni olarak özetleyip kaydet.",
+        "operation": "set",
+        "key": "={{ $fromAI('user_name', 'Kullanıcının söylediği isim', 'string').toLowerCase().trim() }}",
+        "value": "={{ $fromAI('profile_json', 'Kullanıcının bütçe seviyesi, ilgi alanları ve tercihlerini özetleyen kısa bir JSON metni, örn: {\"budget\":\"ekonomik\",\"interests\":[\"doğa\",\"macera\"]}', 'string') }}"
+      },
+      "type": "n8n-nodes-base.redisTool",
+      "typeVersion": 1,
+      "position": [
+        1360,
+        224
+      ],
+      "id": "425742ab-3f7f-4133-b1f6-5efe791e5401",
+      "name": "save_user_preference",
+      "credentials": {
+        "redis": {
+          "id": "A47K6wElOqLCF71l",
+          "name": "Redis account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "Kullanıcı kendini ismiyle tanıttığında, konuşmanın başında bu aracı çağırarak daha önce kayıtlı bir tercih profili olup olmadığını kontrol et.",
+        "operation": "get",
+        "key": "={{ $fromAI('user_name', 'Kullanıcının söylediği isim', 'string').toLowerCase().trim() }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.redisTool",
+      "typeVersion": 1,
+      "position": [
+        1536,
+        224
+      ],
+      "id": "e3acb489-4404-4aee-8a3f-dd43f71ad4e6",
+      "name": "get_user_preference",
+      "credentials": {
+        "redis": {
+          "id": "A47K6wElOqLCF71l",
+          "name": "Redis account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "retrieve-as-tool",
+        "toolDescription": "Pegasus Havayolları'nın uçtuğu destinasyon ağını kontrol eder. Kullanıcı bir yere gitmek istediğinde, Pegasus'un o rotaya uçup uçmadığını kontrol etmek için kullan.",
+        "memoryKey": {
+          "__rl": true,
+          "value": "pegasus_kb",
+          "mode": "list"
+        },
+        "topK": 10
+      },
+      "type": "@n8n/n8n-nodes-langchain.vectorStoreInMemory",
+      "typeVersion": 1.3,
+      "position": [
+        1696,
+        240
+      ],
+      "id": "bef49d90-f26b-48f1-a748-4571d8226ebd",
+      "name": "Simple Vector Store1"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.embeddingsOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        1792,
+        448
+      ],
+      "id": "a777b470-b2f4-4270-b035-25ca0b20b6a7",
+      "name": "Embeddings OpenAI1",
+      "credentials": {
+        "openAiApi": {
+          "id": "26nfPhOXXiHAIAxI",
+          "name": "OpenAI account pegasus"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "toolDescription": "Kullanıcının bütçe, ilgi alanları ve seyahat ayı gibi birden fazla kriterini aynı anda değerlendirip, en uygun destinasyonları GEREKÇELERİYLE sıralayan akıllı öneri motoru. Kullanıcı birden fazla kriter (bütçe VE ilgi alanı VE/VEYA ay) belirttiğinde bu aracı kullan; sadece tek bir kriter varsa (örn. sadece \"ekonomik yerler\" gibi) bilgi tabanı aracını kullanmaya devam et.",
+        "method": "POST",
+        "url": "http://host.docker.internal:8000/recommend",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"budget\": \"{{ $fromAI('budget', 'Kullanıcının bütçe seviyesi: Ekonomik, Ekonomik-Orta, Orta, Orta-Yüksek, Yüksek veya Çok Yüksek', 'string') }}\",\n  \"interests\": {{ $fromAI('interests', 'Kullanıcının ilgi alanları, virgülle ayrılmış bir JSON dizisi olarak, örn: [\"doğa\",\"macera\"]', 'string') }},\n  \"month\": {{ $fromAI('month', 'Kullanıcının belirttiği seyahat ayı, 1-12 arası sayı, belirtmediyse 0', 'number') }},\n  \"top_n\": 5\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.4,
+      "position": [
+        1136,
+        384
+      ],
+      "id": "f0087217-d390-4a08-a4ac-0bbef2a45bea",
+      "name": "get_smart_recommendations"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When chat message received": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Redis Chat Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Vector Store": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Embeddings OpenAI": {
+      "ai_embedding": [
+        [
+          {
+            "node": "Simple Vector Store",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "get_weather": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "get_timezone": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "get_exchange_rate": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "get_country_info": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "save_user_preference": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "get_user_preference": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Vector Store1": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Embeddings OpenAI1": {
+      "ai_embedding": [
+        [
+          {
+            "node": "Simple Vector Store1",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "get_smart_recommendations": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "6700ad0d-f632-468c-a273-60047599c139",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "13dc5236432b2b526a43388d394b6c8668208af8d8804d352a2e33d3039fc231"
+  },
+  "id": "WnPDATfqxrretura",
+  "tags": []
+}
